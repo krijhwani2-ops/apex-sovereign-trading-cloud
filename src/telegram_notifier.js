@@ -14,7 +14,7 @@ const TELEGRAM_CONFIG_PATH = path.join(rootDir, 'config', 'telegram_config.json'
 export function getTelegramConfig() {
   let cfg = {
     enabled: true,
-    botToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    botToken: process.env.TELEGRAM_BOT_TOKEN || '8775287975:AAHSPUT0wxUmMAxQnscQsHWVslWFPKVEwY8',
     chatId: process.env.TELEGRAM_CHAT_ID || '5489148234',
     notifyOnScan: true,
     notifyOnTrade: true,
@@ -25,11 +25,13 @@ export function getTelegramConfig() {
   if (fs.existsSync(TELEGRAM_CONFIG_PATH)) {
     try {
       const saved = JSON.parse(fs.readFileSync(TELEGRAM_CONFIG_PATH, 'utf8'));
-      cfg = { ...cfg, ...saved };
+      if (saved.botToken) cfg.botToken = saved.botToken;
+      if (saved.chatId) cfg.chatId = saved.chatId;
     } catch (e) {}
   }
   return cfg;
 }
+
 
 
 /**
