@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "webhookUrl": "https://script.google.com/macros/s/AKfycbyVeOaTFTwTjso5IJ7olpdl2kwcGhaUQdvCQhpuVmlQmTKKpfgAcq8-VdspDTyCbhEp/exec",
+  "sheetName": "APEX-Sovereign Quantum Master Sheet",
+  "autoSyncOnScan": true,
+  "autoSyncOnTradeClose": true,
+  "lastSyncTime": "17/8/2026, 10:59:54 pm",
+  "lastSyncStatus": "SYNC_SUCCESS"
+}
