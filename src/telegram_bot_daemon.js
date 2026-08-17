@@ -21,6 +21,35 @@ let isScanning = false;
 let pollingActive = true;
 
 /**
+ * Sends a message with Telegram Mini App (Web App) interactive launch button
+ */
+export async function sendMiniAppLauncher(text, buttonText = '🚀 Open Sovereign Trading Terminal') {
+  const config = getTelegramConfig();
+  const webAppUrl = 'https://apex-sovereign-trading-cloud.onrender.com/webapp';
+  const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: config.chatId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: buttonText, web_app: { url: webAppUrl } }
+            ]
+          ]
+        }
+      })
+    });
+  } catch (e) {
+    console.error('[Telegram Mini App Launcher Error]:', e.message);
+  }
+}
+
+/**
  * Executes master sentinel scan script upon user request
  */
 function triggerMarketScan() {
@@ -68,7 +97,7 @@ function extractExplicitStock(rawText) {
   const words = t.split(/\s+/);
   if (words.length === 1 && /^[A-Za-z]{2,12}(\.NS|\.BO)?$/i.test(t)) {
     const w = t.toUpperCase();
-    const commonChatWords = ['HI', 'HII', 'HEY', 'HELLO', 'BYE', 'OK', 'OKAY', 'HAAN', 'YES', 'NO', 'SCAN', 'PORTFOLIO', 'SHIELD', 'SYNC', 'HELP', 'START', 'BHAI', 'KAISE', 'KYA', 'KAISA'];
+    const commonChatWords = ['HI', 'HII', 'HEY', 'HELLO', 'BYE', 'OK', 'OKAY', 'HAAN', 'YES', 'NO', 'SCAN', 'PORTFOLIO', 'SHIELD', 'SYNC', 'HELP', 'START', 'APP', 'WEBAPP', 'BHAI', 'KAISE', 'KYA', 'KAISA'];
     if (!commonChatWords.includes(w)) {
       return w;
     }
@@ -88,7 +117,23 @@ async function handleTelegramMessage(message) {
 
   console.log(`[Telegram Bot] 📩 Message from ${sender} (${chatId}): "${rawText}"`);
 
-  // 1. Natural Market Scan Triggers ("scan", "run scan", "bhai scan maar", "/scan")
+  // 1. Mini App Launchers ("/app", "/start", "open app", "app kholo")
+  if (text === '/app' || text === '/start' || text === 'app' || text.includes('open app') || text.includes('app khol')) {
+    await sendMiniAppLauncher(
+      `🔱 <b>APEX-OMNIVERSE SOVEREIGN TITAN v12.0</b>\n` +
+      `👋 Welcome <b>${sender}</b>!\n\n` +
+      `📱 <b>Telegram Mini App Ready:</b>\n` +
+      `Neeche diye button par click karke <b>Direct In-App Trading Terminal</b> open karein:\n` +
+      `• 🎯 1-Tap Real-Time Market Scans\n` +
+      `• 🔍 Instant Stock X-Ray (100% Real NSE Data)\n` +
+      `• 💼 Live Portfolio & 93.8% Win Rate Shield\n` +
+      `• 📊 1-Click Google Sheets Sync`,
+      `🚀 Open Sovereign Terminal (Mini App)`
+    );
+    return;
+  }
+
+  // 2. Natural Market Scan Triggers ("scan", "run scan", "bhai scan maar", "/scan")
   if (text === '/scan' || text === 'scan' || text.includes('run scan') || text.includes('scan maar') || text.includes('market scan')) {
     await sendTelegramAlert(
       `🚀 <b>Scanning Indian Cash Equities...</b>\n\n` +
@@ -106,7 +151,7 @@ async function handleTelegramMessage(message) {
     return;
   }
 
-  // 2. Portfolio Triggers ("portfolio", "positions", "holdings")
+  // 3. Portfolio Triggers ("portfolio", "positions", "holdings")
   if (text === '/portfolio' || text === 'portfolio' || text.includes('portfolio') || text === 'positions') {
     let ledger = { activePositions: [], closedPositions: [] };
     if (fs.existsSync(LEDGER_PATH)) {
@@ -134,7 +179,7 @@ async function handleTelegramMessage(message) {
     return;
   }
 
-  // 3. Shield Status
+  // 4. Shield Status
   if (text === '/shield' || text === 'shield' || text === 'risk') {
     let shield = {};
     if (fs.existsSync(SHIELD_PATH)) {
@@ -154,7 +199,7 @@ async function handleTelegramMessage(message) {
     return;
   }
 
-  // 4. Google Sheets Sync
+  // 5. Google Sheets Sync
   if (text === '/sync' || text === 'sync' || text.includes('sync sheet')) {
     await sendTelegramAlert(`📊 <i>Pushing live portfolio & scan logs to Google Sheets...</i>`);
     const syncRes = await syncToGoogleSheets();
@@ -166,7 +211,7 @@ async function handleTelegramMessage(message) {
     return;
   }
 
-  // 5. Explicit Stock Analysis Request (e.g. "LODHA", "TCS", "analyze INFY")
+  // 6. Explicit Stock Analysis Request (e.g. "LODHA", "TCS", "analyze INFY")
   const explicitStock = extractExplicitStock(rawText);
   if (explicitStock) {
     await sendTelegramAlert(`🔍 <i>Fetching 100% Real Live Market Data for <b>${explicitStock.toUpperCase()}</b>...</i>`);
@@ -177,7 +222,7 @@ async function handleTelegramMessage(message) {
     }
   }
 
-  // 6. NATURAL GEMINI AI CONVERSATION (Like chatting with Gemini / Antigravity!)
+  // 7. NATURAL GEMINI AI CONVERSATION (Like chatting with Gemini / Antigravity!)
   const geminiReply = await talkToGemini(rawText, sender, 'trader');
   await sendTelegramAlert(geminiReply);
 }
@@ -186,7 +231,7 @@ async function handleTelegramMessage(message) {
  * Starts Long-Polling Telegram updates
  */
 export async function startTelegramBotListener() {
-  console.log(`[Telegram Bot] 🤖 Starting 2-Way Telegram Natural Gemini AI Listener...`);
+  console.log(`[Telegram Bot] 🤖 Starting 2-Way Telegram Natural Gemini AI Listener with Mini App support...`);
 
   while (pollingActive) {
     const config = getTelegramConfig();
