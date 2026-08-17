@@ -83,21 +83,37 @@ export async function sendTelegramAlert(text) {
         lastAlertSent: nowIST,
         lastAlertStatus: 'SENT_SUCCESS'
       });
-      console.log(`[Telegram Notifier] ✅ Actionable Trade Alert sent to Chat ID: ${config.chatId}`);
+      console.log(`[Telegram Notifier] ✅ Message sent to Chat ID: ${config.chatId}`);
       return { success: true, status: 'SENT', timestamp: nowIST };
     } else {
-      console.error(`[Telegram Notifier] ❌ Telegram API Error:`, data.description);
-      saveTelegramConfig({
-        lastAlertSent: nowIST,
-        lastAlertStatus: `ERROR: ${data.description}`
+      console.warn(`[Telegram Notifier] ⚠️ Telegram HTML parse issue: ${data.description}. Retrying as clean text...`);
+      // Retry without HTML parse mode to ensure delivery
+      const plainText = text.replace(/<[^>]+>/g, '');
+      const retryRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: config.chatId,
+          text: plainText,
+          disable_web_page_preview: true
+        })
       });
-      return { success: false, status: 'API_ERROR', description: data.description };
+      const retryData = await retryRes.json();
+      if (retryData.ok) {
+        console.log(`[Telegram Notifier] ✅ Message sent as plain text fallback!`);
+        return { success: true, status: 'SENT_PLAIN', timestamp: nowIST };
+      } else {
+        console.error(`[Telegram Notifier] ❌ Telegram API Error:`, retryData.description);
+        return { success: false, status: 'FAILED', error: retryData.description };
+      }
     }
   } catch (err) {
     console.error(`[Telegram Notifier] ❌ Network Error:`, err.message);
     return { success: false, status: 'NETWORK_ERROR', error: err.message };
   }
 }
+
+
 
 /**
  * Formats and broadcasts complete institutional trade execution cards to Telegram
