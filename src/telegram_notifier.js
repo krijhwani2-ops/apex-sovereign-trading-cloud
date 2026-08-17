@@ -12,22 +12,25 @@ const TELEGRAM_CONFIG_PATH = path.join(rootDir, 'config', 'telegram_config.json'
  * Loads current Telegram configuration
  */
 export function getTelegramConfig() {
-  if (fs.existsSync(TELEGRAM_CONFIG_PATH)) {
-    try {
-      return JSON.parse(fs.readFileSync(TELEGRAM_CONFIG_PATH, 'utf8'));
-    } catch (e) {}
-  }
-  return {
-    enabled: false,
-    botToken: '',
-    chatId: '',
+  let cfg = {
+    enabled: true,
+    botToken: process.env.TELEGRAM_BOT_TOKEN || '',
+    chatId: process.env.TELEGRAM_CHAT_ID || '5489148234',
     notifyOnScan: true,
     notifyOnTrade: true,
     notifyOnShieldAlert: true,
     lastAlertSent: null,
-    lastAlertStatus: 'NOT_CONFIGURED'
+    lastAlertStatus: 'ACTIVE'
   };
+  if (fs.existsSync(TELEGRAM_CONFIG_PATH)) {
+    try {
+      const saved = JSON.parse(fs.readFileSync(TELEGRAM_CONFIG_PATH, 'utf8'));
+      cfg = { ...cfg, ...saved };
+    } catch (e) {}
+  }
+  return cfg;
 }
+
 
 /**
  * Saves updated Telegram configuration
