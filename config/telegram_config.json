@@ -1,8 +1,10 @@
 {
   "enabled": true,
-  "botToken": "",
+  "botToken": "8775287975:AAHSPUT0wxUmMAxQnscQsHWVslWFPKVEwY8",
   "chatId": "5489148234",
   "notifyOnScan": true,
   "notifyOnTrade": true,
-  "notifyOnShieldAlert": true
+  "notifyOnShieldAlert": true,
+  "lastAlertSent": "17/8/2026, 11:53:30 pm",
+  "lastAlertStatus": "SENT_SUCCESS"
 }
