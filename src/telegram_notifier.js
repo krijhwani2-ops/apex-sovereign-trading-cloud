@@ -14,7 +14,7 @@ const TELEGRAM_CONFIG_PATH = path.join(rootDir, 'config', 'telegram_config.json'
 export function getTelegramConfig() {
   let cfg = {
     enabled: true,
-    botToken: process.env.TELEGRAM_BOT_TOKEN || '8775287975:AAHSPUT0wxUmMAxQnscQsHWVslWFPKVEwY8',
+    botToken: process.env.TELEGRAM_BOT_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN',
     chatId: process.env.TELEGRAM_CHAT_ID || '5489148234',
     notifyOnScan: true,
     notifyOnTrade: true,
