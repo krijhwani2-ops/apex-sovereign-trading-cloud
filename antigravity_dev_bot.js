@@ -26,19 +26,21 @@ const DEV_BOT_CONFIG_PATH = path.join(__dirname, 'config', 'dev_bot_config.json'
 
 export function getDevBotConfig() {
   let cfg = {
-    botToken: process.env.DEV_BOT_TOKEN || "",
+    botToken: process.env.DEV_BOT_TOKEN || "YOUR_DEV_BOT_TOKEN",
     allowedChatId: process.env.TELEGRAM_CHAT_ID || "5489148234",
-    geminiApiKey: process.env.GEMINI_API_KEY || "",
+    geminiApiKey: process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY",
     workspaceRoot: rootDir
   };
   if (fs.existsSync(DEV_BOT_CONFIG_PATH)) {
     try {
       const saved = JSON.parse(fs.readFileSync(DEV_BOT_CONFIG_PATH, 'utf8'));
-      cfg = { ...cfg, ...saved };
+      if (saved.botToken) cfg.botToken = saved.botToken;
+      if (saved.geminiApiKey) cfg.geminiApiKey = saved.geminiApiKey;
     } catch (e) {}
   }
   return cfg;
 }
+
 
 
 const config = getDevBotConfig();
