@@ -15,18 +15,21 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '..');
 
+const DEFAULT_GEMINI_KEY = 'YOUR_GEMINI_API_KEY';
 const GEMINI_CONFIG_PATH = path.join(rootDir, 'config', 'gemini_config.json');
 
 export function getGeminiApiKey() {
-  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10) return process.env.GEMINI_API_KEY;
   if (fs.existsSync(GEMINI_CONFIG_PATH)) {
     try {
       const cfg = JSON.parse(fs.readFileSync(GEMINI_CONFIG_PATH, 'utf8'));
-      if (cfg.apiKey) return cfg.apiKey;
+      if (cfg.apiKey && cfg.apiKey.length > 10) return cfg.apiKey;
     } catch (e) {}
   }
-  return '';
+  return DEFAULT_GEMINI_KEY;
 }
+
 
 
 /**
