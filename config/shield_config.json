@@ -1,0 +1,19 @@
+{
+  "minRsi14Limit": 48,
+  "minRsi7Limit": 35,
+  "maxBBPercentB": 0.28,
+  "maxWickRatio": 0.24,
+  "minVolSurge": 1.2,
+  "minGatePass": 9,
+  "maxTimeStop": 60,
+  "restrictedSymbols": [
+    "CHOLAFIN.NS"
+  ],
+  "enableOBVFilter": true,
+  "enableHigherLowCheck": true,
+  "reasoning": [
+    "Avg loss severity 7.9% > 5%. Horizon extended to 60 days to allow blue-chip recovery without premature shakeout.",
+    "CHOLAFIN (CHOLAFIN.NS) quarantined in Blacklist Firewall for 30 days post -7.9% loss.",
+    "Exceptional performance: 93.8% win rate. Slightly expanding opportunity window."
+  ]
+}
