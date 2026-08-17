@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX-OMNIVERSE SOVEREIGN TITAN v12.0 — Trading Intelligence & Portfolio Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="theme-neon-lime">
+
+  <div class="dashboard-wrapper">
+    
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- 1. LEFT SIDEBAR NAVIGATION -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <aside class="app-sidebar">
+      
+      <!-- USER / BRAND PROFILE -->
+      <div class="sidebar-user-card">
+        <div class="user-avatar">
+          <span>🔱</span>
+        </div>
+        <div class="user-info">
+          <h4>Apex Sovereign</h4>
+          <span class="user-role">Titan v12.0 • 97% AI</span>
+        </div>
+      </div>
+
+      <!-- SEARCH INPUT -->
+      <div class="sidebar-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search..." id="globalSearchInput">
+        <span class="kbd-badge">⌘K</span>
+      </div>
+
+      <!-- NAVIGATION SECTIONS -->
+      <div class="sidebar-menu-group">
+        <span class="menu-heading">DASHBOARDS</span>
+        <ul class="sidebar-menu">
+          <li class="menu-item active" data-tab="tab-overview">
+            <span class="menu-icon"><i class="fa-solid fa-table-cells-large"></i></span>
+            <span class="menu-text">Overview</span>
+          </li>
+          <li class="menu-item" data-tab="tab-portfolio">
+            <span class="menu-icon"><i class="fa-solid fa-briefcase"></i></span>
+            <span class="menu-text">Active Portfolio</span>
+            <span class="menu-badge" id="sideActiveCount">0</span>
+          </li>
+          <li class="menu-item" data-tab="tab-scans">
+            <span class="menu-icon"><i class="fa-solid fa-crosshairs"></i></span>
+            <span class="menu-text">Daily Scans Archive</span>
+          </li>
+          <li class="menu-item" data-tab="tab-success">
+            <span class="menu-icon"><i class="fa-solid fa-trophy"></i></span>
+            <span class="menu-text">Success & Closed Trades</span>
+          </li>
+          <li class="menu-item" data-tab="tab-news">
+            <span class="menu-icon"><i class="fa-solid fa-newspaper"></i></span>
+            <span class="menu-text">Live News & Catalysts</span>
+          </li>
+          <li class="menu-item" data-tab="tab-terminal">
+            <span class="menu-icon"><i class="fa-solid fa-chart-line"></i></span>
+            <span class="menu-text">Pro Terminal Chart</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-menu-group">
+        <span class="menu-heading">SETTINGS & TOOLS</span>
+        <ul class="sidebar-menu">
+          <li class="menu-item" data-tab="tab-shield">
+            <span class="menu-icon"><i class="fa-solid fa-shield-virus"></i></span>
+            <span class="menu-text">AI Shield & Quarantine</span>
+          </li>
+          <li class="menu-item" data-tab="tab-sheets">
+            <span class="menu-icon"><i class="fa-solid fa-file-excel"></i></span>
+            <span class="menu-text">Google Sheets Hub</span>
+          </li>
+          <li class="menu-item" onclick="triggerScanFromUI()">
+            <span class="menu-icon"><i class="fa-solid fa-radar"></i></span>
+            <span class="menu-text">Run Live Scanner</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- SIDEBAR FOOTER BRAND -->
+      <div class="sidebar-footer-brand">
+        <div class="brand-capsule">
+          <span class="brand-dots">•••</span>
+          <span class="brand-title">APEX TITAN</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- 2. CENTER MAIN DASHBOARD -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <main class="app-main-viewport">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="main-topbar">
+        <div class="topbar-breadcrumbs">
+          <i class="fa-solid fa-layer-group breadcrumb-icon"></i>
+          <i class="fa-regular fa-star breadcrumb-star"></i>
+          <span class="breadcrumb-text">Dashboards <span class="divider">/</span> <strong id="currentBreadcrumb">Overview</strong></span>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="topbar-icon-btn" id="themeToggleBtn" title="Toggle Theme"><i class="fa-regular fa-moon"></i></div>
+          <div class="topbar-icon-btn" title="Live Clock"><i class="fa-regular fa-clock"></i> <span id="topbarTime" style="font-size: 0.75rem; margin-left: 4px;">--:--</span></div>
+          <div class="topbar-icon-btn" title="Google Sheets Sync Status" id="btnTopbarSync"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <div class="topbar-icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i><span class="notif-dot"></span></div>
+          <div class="topbar-icon-btn" title="Global Settings"><i class="fa-solid fa-globe"></i></div>
+          <button class="btn-topbar-cta" onclick="triggerScanFromUI()"><i class="fa-solid fa-bolt"></i> Run Scan</button>
+        </div>
+      </header>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 1: EXECUTIVE OVERVIEW (EXACT PIXEL-MATCH WITH SCREENSHOT) -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-overview" class="tab-pane active">
+        
+        <!-- TITLE & TIMEFRAME FILTER -->
+        <div class="view-header-row">
+          <h2 class="view-title">Overview</h2>
+          <div class="view-timeframe-selector">
+            <select id="timeframeSelect" class="select-timeframe">
+              <option value="today">Today ▾</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="all">All-Time 5Y</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- TOP 4 KPI CARDS (MATCHING SCREENSHOT) -->
+        <div class="hero-kpi-row">
+          
+          <!-- Card 1: Net Revenue / Portfolio Profit -->
+          <div class="hero-kpi-card">
+            <span class="kpi-title">Net Realized Profit</span>
+            <div class="kpi-main-val" id="kpiNetProfit">+₹543,420</div>
+            <div class="kpi-trend positive">
+              <i class="fa-solid fa-arrow-trend-up"></i> <span>+17.3% vs avg target</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Win Rate Accuracy -->
+          <div class="hero-kpi-card">
+            <span class="kpi-title">Portfolio Win Rate</span>
+            <div class="kpi-main-val" id="kpiHeroWinRate">75.0%</div>
+            <div class="kpi-trend positive">
+              <i class="fa-solid fa-arrow-trend-up"></i> <span>6 Wins / 8 Closed</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Quarterly Revenue Goal / 97% Dream Target -->
+          <div class="hero-kpi-card kpi-card-radial">
+            <div class="radial-info">
+              <span class="kpi-title">Dream Win Rate Goal</span>
+              <div class="kpi-main-val" id="kpiGoalPct">97%</div>
+              <span class="kpi-sub-target">Goal: 97.0% Accuracy</span>
+            </div>
+            <div class="radial-gauge-box">
+              <svg viewBox="0 0 36 36" class="circular-chart lime">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="circle" stroke-dasharray="92, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card 4: Qualified Scans / Universe -->
+          <div class="hero-kpi-card">
+            <span class="kpi-title">Equities Screened</span>
+            <div class="kpi-main-val" id="kpiTotalScanned">18,221</div>
+            <div class="kpi-trend positive">
+              <i class="fa-solid fa-arrow-trend-up"></i> <span>95 Nifty Blue-Chips</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MIDDLE SECTION: SALES OVERVIEW (DONUT) + MINI KPIS + GREEN AREA CHART -->
+        <div class="middle-dashboard-grid">
+          
+          <!-- LEFT 60% CARD: CONFLUENCE & MOAT DISTRIBUTION (DONUT) -->
+          <div class="dash-surface-card sales-overview-card">
+            <div class="card-top-bar">
+              <h3 class="card-heading">Signal Confluence & Moat Allocation</h3>
+              <i class="fa-solid fa-ellipsis-vertical card-menu-btn"></i>
+            </div>
+
+            <div class="donut-chart-flex">
+              <!-- Donut Chart Canvas with Center Text -->
+              <div class="donut-canvas-wrapper">
+                <canvas id="moatDonutChart"></canvas>
+                <div class="donut-center-label">
+                  <strong id="donutCenterVal">102k</strong>
+                  <span>Weekly Visits</span>
+                </div>
+              </div>
+
+              <!-- Right Stat Box & Breakdown -->
+              <div class="donut-stats-column">
+                <div class="stat-pill-box">
+                  <span class="pill-icon">$</span>
+                  <div>
+                    <span class="pill-title">High-Conviction Value</span>
+                    <strong class="pill-val">₹71,020</strong>
+                  </div>
+                </div>
+
+                <div class="donut-legend-grid">
+                  <div class="legend-item">
+                    <span class="legend-dot green"></span>
+                    <span class="legend-name">Tier-1 Monopoly</span>
+                    <strong class="legend-val">₹55,640</strong>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot lime"></span>
+                    <span class="legend-name">Duopoly Giants</span>
+                    <strong class="legend-val">₹11,420</strong>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot teal"></span>
+                    <span class="legend-name">Standard Leaders</span>
+                    <strong class="legend-val">₹1,840</strong>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot gold"></span>
+                    <span class="legend-name">Liquid Cash</span>
+                    <strong class="legend-val">₹2,120</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT 40% CARDS: 2 MINI KPIS + NEON GREEN AREA CHART -->
+          <div class="right-spark-column">
+            
+            <!-- 2 Mini KPI Cards Row -->
+            <div class="mini-kpi-pair">
+              <div class="mini-kpi-pill-card">
+                <div class="mini-icon-circle"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="mini-kpi-text">
+                  <span class="m-label">Active Blue Chips</span>
+                  <strong class="m-val" id="miniActiveCount">862</strong>
+                  <span class="m-sub negative">-8% Last Week</span>
+                </div>
+              </div>
+
+              <div class="mini-kpi-pill-card">
+                <div class="mini-icon-circle green-accent"><i class="fa-solid fa-chart-simple"></i></div>
+                <div class="mini-kpi-text">
+                  <span class="m-label">Total Realized</span>
+                  <strong class="m-val">₹25.6k</strong>
+                  <span class="m-sub positive">+42% Weekly</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total Profit Area Line Chart (Neon Green Gradient) -->
+            <div class="dash-surface-card profit-line-card">
+              <div class="card-top-bar" style="margin-bottom: 0.25rem;">
+                <div>
+                  <span class="chart-subtitle">Total Realized Profit:</span>
+                  <div class="chart-main-profit" id="chartTotalProfit">₹136,755.77</div>
+                </div>
+              </div>
+              <div class="neon-line-canvas-box">
+                <canvas id="neonProfitChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- BOTTOM SECTION: QUALIFIED CANDIDATES LIST + PLAN-B HERO BANNER -->
+        <div class="bottom-dashboard-grid">
+          
+          <!-- LEFT 65%: CANDIDATES / CUSTOMER LIST TABLE -->
+          <div class="dash-surface-card customer-list-card">
+            <div class="card-top-bar">
+              <h3 class="card-heading">Top Qualified Swing Opportunities</h3>
+              <i class="fa-solid fa-ellipsis-vertical card-menu-btn"></i>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="overview-table">
+                <thead>
+                  <tr>
+                    <th>Stock Name & Symbol</th>
+                    <th>14-Pillar Confluence</th>
+                    <th>Optimal Target 1 (+4.5%)</th>
+                    <th>News Verdict</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="overviewCandidatesTable">
+                  <!-- Injected via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RIGHT 35%: PLAN-B SOVEREIGN TITAN HERO BANNER -->
+          <div class="dash-surface-card plan-b-hero-card">
+            <div class="plan-b-top">
+              <span class="plan-badge"><i class="fa-solid fa-bolt"></i> Sovereign Plan-B</span>
+              <i class="fa-solid fa-ellipsis-vertical card-menu-btn"></i>
+            </div>
+
+            <div class="plan-b-pricing">
+              <div class="price-val">60d <span>/ Mean-Reversion Horizon</span></div>
+            </div>
+
+            <p class="plan-b-desc">
+              Institutional blue-chip armor eliminates premature stop-loss whipsaws. Hold with fundamental resilience.
+            </p>
+
+            <div class="plan-b-actions">
+              <button class="btn-plan-cta" onclick="triggerScanFromUI()">Run Live Scan</button>
+              <button class="btn-plan-star"><i class="fa-solid fa-star"></i></button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 2: ACTIVE PORTFOLIO TRACKER -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-portfolio" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Active Portfolio & Position Tracker</h2>
+          <div class="action-btn-row">
+            <button class="btn-secondary-pill" onclick="exportTabCsv('portfolio')"><i class="fa-solid fa-download"></i> Export CSV</button>
+            <button class="btn-secondary-pill" onclick="loadDashboardData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+
+        <div class="dash-surface-card" style="margin-top: 1rem;">
+          <div class="table-responsive">
+            <table class="overview-table" id="portfolioTable">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Entry Date</th>
+                  <th>Entry Price</th>
+                  <th>Current Price (CMP)</th>
+                  <th>P&L (%)</th>
+                  <th>Days Held</th>
+                  <th>Trade Stage</th>
+                  <th>Target 1 (+4.5%)</th>
+                  <th>Target 2 (+8.0%)</th>
+                  <th>Action Protocol</th>
+                </tr>
+              </thead>
+              <tbody id="portfolioTableBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 3: DAILY SCANS ARCHIVE ("Kis Date Ko Kya Scan Hua") -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-scans" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Daily Scans Archive ("Kis Date Ko Kya Scan Hua")</h2>
+          <div class="filter-controls-row">
+            <select id="scanDateSelect" class="select-timeframe"></select>
+            <select id="tierFilter" class="select-timeframe">
+              <option value="ALL">All Tiers (AAA+ & AA+)</option>
+              <option value="AAA+">🔥 AAA+ Elite Only</option>
+              <option value="AA+">🟢 AA+ Pro Only</option>
+            </select>
+            <button class="btn-secondary-pill" onclick="exportTabCsv('scans')"><i class="fa-solid fa-download"></i> Export Day CSV</button>
+          </div>
+        </div>
+
+        <div class="dash-surface-card" style="margin-top: 1rem;">
+          <div class="table-responsive">
+            <table class="overview-table" id="scansTable">
+              <thead>
+                <tr>
+                  <th>Signal Tier</th>
+                  <th>Stock Symbol</th>
+                  <th>CMP (₹)</th>
+                  <th>52W Peak Buffer</th>
+                  <th>14-Pillar Score</th>
+                  <th>Piotroski F-Score</th>
+                  <th>ROCE (%)</th>
+                  <th>Moat Tier</th>
+                  <th>News Sentiment</th>
+                  <th>News Gatekeeper</th>
+                  <th>Target 1 (+4.5%)</th>
+                  <th>Target 2 (+8.0%)</th>
+                </tr>
+              </thead>
+              <tbody id="scansTableBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="deepRationaleContainer" class="deep-cards-grid" style="margin-top: 1.5rem;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 4: SUCCESS & CLOSED TRADES ("Kitne Stock Success Hue") -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-success" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Trade Success Analytics & Ledger ("Kitne Stock Success Hue")</h2>
+          <button class="btn-secondary-pill" onclick="exportTabCsv('closed')"><i class="fa-solid fa-download"></i> Export Closed CSV</button>
+        </div>
+
+        <div class="dash-surface-card" style="margin-top: 1rem;">
+          <div class="table-responsive">
+            <table class="overview-table" id="closedTradesTable">
+              <thead>
+                <tr>
+                  <th>Outcome</th>
+                  <th>Symbol</th>
+                  <th>Entry Date</th>
+                  <th>Exit Date</th>
+                  <th>Entry (₹)</th>
+                  <th>Exit (₹)</th>
+                  <th>Realized Return (%)</th>
+                  <th>Cash P&L (₹)</th>
+                  <th>Exit Protocol & Reason</th>
+                </tr>
+              </thead>
+              <tbody id="closedTradesTableBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 5: LIVE NEWS & CATALYSTS TERMINAL -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-news" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Live AI News Intelligence & Catalysts</h2>
+        </div>
+        <div id="newsTerminalContainer" class="news-cards-grid" style="margin-top: 1rem;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 6: PRO TERMINAL CHART VIEW -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-terminal" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Pro Technical Chart Studio</h2>
+        </div>
+        <div class="dash-surface-card" style="margin-top: 1rem; padding: 1.5rem;">
+          <div class="stock-title-block" style="margin-bottom: 1rem;">
+            <h2 id="terminalStockSymbol" style="font-size: 1.5rem; color: #FFFFFF;">DLF.NS</h2>
+            <span class="stock-name-tag" id="terminalStockName" style="color: var(--text-muted);">Standard Market Leader</span>
+            <span class="menu-badge" id="terminalSignalTag" style="background: var(--neon-lime); color: #000; font-weight: 700;">🔥 AAA+ ELITE</span>
+          </div>
+          <div style="height: 420px; width: 100%;">
+            <canvas id="terminalMainChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 7: AI RISK SHIELD & QUARANTINE -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-shield" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">AI Risk Shield & Dynamic Firewall</h2>
+          <button class="btn-secondary-pill" id="btnRecalibrateShield"><i class="fa-solid fa-arrows-rotate"></i> Recalibrate Now</button>
+        </div>
+        <div class="middle-dashboard-grid" style="margin-top: 1rem;">
+          <div class="dash-surface-card">
+            <h3 class="card-heading">Active Calibrated Parameters</h3>
+            <ul class="shield-rules-list" id="shieldRulesList" style="margin-top: 1rem; list-style: none;"></ul>
+          </div>
+          <div class="dash-surface-card">
+            <h3 class="card-heading">30-Day Quarantine Blacklist</h3>
+            <div id="quarantineSymbolsContainer" style="margin: 1rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+            <div id="shieldReasoningBox" style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <!-- TAB 8: GOOGLE SHEETS HUB -->
+      <!-- ══════════════════════════════════════════════════════════════════ -->
+      <div id="tab-sheets" class="tab-pane">
+        <div class="view-header-row">
+          <h2 class="view-title">Google Sheets Real-Time Dual-Sync Hub</h2>
+          <div class="action-btn-row">
+            <a href="https://sheets.new" target="_blank" class="btn-plan-cta" style="padding: 0.5rem 1.15rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Sheets (sheets.new)</a>
+          </div>
+        </div>
+
+        <div class="dash-surface-card" style="margin-top: 1rem; padding: 1.25rem;">
+          <div class="quick-sheet-launch-banner">
+            <div class="banner-left">
+              <span class="banner-icon">📊</span>
+              <div>
+                <h4 style="color: #FFFFFF; font-size: 1.05rem;">Google Sheets Direct Links & Offline Downloads</h4>
+                <p style="color: var(--text-muted); font-size: 0.82rem;">Create a fresh Google Sheet or download pre-formatted CSV tables below.</p>
+              </div>
+            </div>
+            <div class="banner-actions">
+              <a href="https://sheets.new" target="_blank" class="btn-secondary-pill" style="border-color: var(--neon-lime);"><i class="fa-solid fa-plus"></i> sheets.new</a>
+              <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank" class="btn-secondary-pill"><i class="fa-brands fa-google-drive"></i> Google Drive Sheets</a>
+            </div>
+          </div>
+
+          <div class="export-buttons-row" style="margin: 1rem 0;">
+            <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);"><i class="fa-solid fa-file-csv"></i> Download CSV Tables:</span>
+            <a href="/api/export/csv/portfolio" class="btn-secondary-pill"><i class="fa-solid fa-download"></i> Active Portfolio</a>
+            <a href="/api/export/csv/scans" class="btn-secondary-pill"><i class="fa-solid fa-download"></i> Daily Scans</a>
+            <a href="/api/export/csv/closed" class="btn-secondary-pill"><i class="fa-solid fa-download"></i> Closed Trades</a>
+            <a href="/api/export/csv/shield" class="btn-secondary-pill"><i class="fa-solid fa-download"></i> AI Shield</a>
+          </div>
+
+          <!-- EMBEDDED INTERACTIVE GOOGLE SHEET VIEWER -->
+          <div class="embedded-sheet-container" style="margin-top: 1.5rem; background: #0F1016; border: 1px solid var(--border-card); border-radius: var(--radius-md); padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-card); padding-bottom: 0.5rem;">
+              <div style="display: flex; gap: 0.4rem;" id="embeddedSheetTabs">
+                <button class="btn-secondary-pill active-sheet-tab" data-sheet="portfolio" onclick="switchEmbeddedSheet('portfolio', this)">📊 Active_Portfolio</button>
+                <button class="btn-secondary-pill" data-sheet="scans" onclick="switchEmbeddedSheet('scans', this)">🎯 Daily_Scans_Archive</button>
+                <button class="btn-secondary-pill" data-sheet="closed" onclick="switchEmbeddedSheet('closed', this)">🏁 Closed_Trades_Ledger</button>
+                <button class="btn-secondary-pill" data-sheet="shield" onclick="switchEmbeddedSheet('shield', this)">🛡️ AI_Risk_Shield</button>
+              </div>
+              <span class="pill-tag green" id="embeddedSheetStatus">🟢 Live Synced</span>
+            </div>
+            
+            <div class="table-responsive" style="max-height: 340px;">
+              <table class="overview-table" id="embeddedSheetTable">
+                <thead id="embeddedSheetThead"></thead>
+                <tbody id="embeddedSheetTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- WEBHOOK CONFIG FORM -->
+          <form id="sheetsConfigForm" style="margin-top: 1.5rem;">
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;"><i class="fa-solid fa-link"></i> Connect Google Apps Script Webhook URL (For 24/7 Cloud Sync):</label>
+              <input type="url" id="webhookUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" required>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <button type="submit" class="btn-plan-cta" style="padding: 0.6rem 1.25rem;"><i class="fa-solid fa-floppy-disk"></i> Save Webhook URL</button>
+              <button type="button" class="btn-secondary-pill" id="btnTestSheetsSync"><i class="fa-solid fa-paper-plane"></i> Test & Sync Now</button>
+            </div>
+          </form>
+
+          <hr style="border: none; border-top: 1px solid var(--border-card); margin: 2rem 0;">
+
+          <!-- TELEGRAM REAL-TIME ALERTS CONFIGURATION -->
+          <div class="telegram-alert-card">
+            <div class="card-top-bar" style="margin-bottom: 0.5rem;">
+              <div>
+                <h4 style="color: #FFFFFF; font-size: 1.05rem;"><i class="fa-brands fa-telegram" style="color: #229ED9;"></i> Telegram Real-Time Scan Alerts</h4>
+                <p style="color: var(--text-muted); font-size: 0.82rem;">Receive instant push notifications on your phone whenever market scans or trade triggers execute.</p>
+              </div>
+              <span class="pill-tag" id="telegramStatusPill" style="background: rgba(34, 158, 217, 0.15); color: #229ED9;">Telegram Bot</span>
+            </div>
+
+            <form id="telegramConfigForm" style="margin-top: 1rem;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Telegram Bot Token:</label>
+                  <input type="text" id="telegramBotTokenInput" class="form-control" placeholder="123456789:ABCdefGhIJKlmNoPQRstuVWXyz" required>
+                  <small style="color: var(--text-dim); font-size: 0.7rem;">Get from @BotFather on Telegram</small>
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Telegram Chat ID:</label>
+                  <input type="text" id="telegramChatIdInput" class="form-control" placeholder="987654321 or @channel_username" required>
+                  <small style="color: var(--text-dim); font-size: 0.7rem;">Get from @userinfobot or channel username</small>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.75rem;">
+                <button type="submit" class="btn-plan-cta" style="padding: 0.6rem 1.25rem; background: #229ED9; color: #FFF; box-shadow: 0 4px 14px rgba(34, 158, 217, 0.3);"><i class="fa-solid fa-floppy-disk"></i> Save Telegram Settings</button>
+                <button type="button" class="btn-secondary-pill" id="btnTestTelegramAlert"><i class="fa-solid fa-paper-plane"></i> Send Test Notification</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+
+
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- 3. RIGHT SIDEBAR (ACTIVITIES & INSTITUTIONAL CHAMPIONS) -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <aside class="app-right-sidebar">
+      
+      <!-- NOTIFICATIONS SECTION (MATCHING SCREENSHOT) -->
+      <div class="right-section">
+        <h4 class="right-heading">Notifications</h4>
+        <ul class="notif-feed-list">
+          <li class="notif-item">
+            <span class="notif-icon-circle green"><i class="fa-solid fa-user-check"></i></span>
+            <div class="notif-item-body">
+              <strong>56 Scans completed</strong>
+              <span class="notif-time">Just now</span>
+            </div>
+          </li>
+          <li class="notif-item">
+            <span class="notif-icon-circle green"><i class="fa-solid fa-cart-shopping"></i></span>
+            <div class="notif-item-body">
+              <strong>132 Orders placed</strong>
+              <span class="notif-time">59 Minutes ago</span>
+            </div>
+          </li>
+          <li class="notif-item">
+            <span class="notif-icon-circle green"><i class="fa-solid fa-wallet"></i></span>
+            <div class="notif-item-body">
+              <strong>Funds secured in Cash</strong>
+              <span class="notif-time">12 Hours ago</span>
+            </div>
+          </li>
+          <li class="notif-item">
+            <span class="notif-icon-circle green"><i class="fa-solid fa-message"></i></span>
+            <div class="notif-item-body">
+              <strong>5 Unread AI catalyst alerts</strong>
+              <span class="notif-time">Today, 11:59 PM</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ACTIVITIES SECTION (MATCHING SCREENSHOT) -->
+      <div class="right-section">
+        <h4 class="right-heading">Activities</h4>
+        <ul class="activity-feed-list">
+          <li class="activity-item">
+            <span class="act-avatar pink">👑</span>
+            <div class="act-body">
+              <span>Triggered Master Sentinel Scan</span>
+              <small>Just now</small>
+            </div>
+          </li>
+          <li class="activity-item">
+            <span class="act-avatar brown">🚀</span>
+            <div class="act-body">
+              <span>HAL +15% profit news detected</span>
+              <small>47 Minutes ago</small>
+            </div>
+          </li>
+          <li class="activity-item">
+            <span class="act-avatar gold">🛡️</span>
+            <div class="act-body">
+              <span>CHOLAFIN quarantined for 30d</span>
+              <small>1 Day ago</small>
+            </div>
+          </li>
+          <li class="activity-item">
+            <span class="act-avatar grey">📊</span>
+            <div class="act-body">
+              <span>Google Sheet auto-synced</span>
+              <small>Feb 2, 2026</small>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- CONTACTS / INSTITUTIONAL CHAMPIONS SECTION (MATCHING SCREENSHOT) -->
+      <div class="right-section">
+        <h4 class="right-heading">Contacts of your managers</h4>
+        <ul class="manager-list">
+          <li class="manager-item">
+            <span class="mgr-avatar gold-ring">👨‍💼</span>
+            <div class="mgr-info">
+              <strong>Daniel Craig</strong>
+              <small>Senior Quant</small>
+            </div>
+            <i class="fa-solid fa-ellipsis mgr-more"></i>
+          </li>
+          <li class="manager-item">
+            <span class="mgr-avatar orange-ring">👩‍💼</span>
+            <div class="mgr-info">
+              <strong>Kate Morrison</strong>
+              <small>Risk Sentinel</small>
+            </div>
+            <i class="fa-solid fa-ellipsis mgr-more"></i>
+          </li>
+          <!-- ACTIVE HIGHLIGHTED MANAGER (LIME GREEN PILL IN SCREENSHOT) -->
+          <li class="manager-item active-manager-pill">
+            <span class="mgr-avatar active-avatar">🧑‍💼</span>
+            <div class="mgr-info">
+              <strong style="color: #000;">Nataniel Donowan</strong>
+            </div>
+            <div class="mgr-quick-actions">
+              <i class="fa-solid fa-envelope"></i>
+              <i class="fa-solid fa-phone"></i>
+            </div>
+          </li>
+          <li class="manager-item">
+            <span class="mgr-avatar blue-ring">👩‍💻</span>
+            <div class="mgr-info">
+              <strong>Elisabeth Wayne</strong>
+              <small>Portfolio Lead</small>
+            </div>
+            <i class="fa-solid fa-ellipsis mgr-more"></i>
+          </li>
+          <li class="manager-item">
+            <span class="mgr-avatar green-ring">👩‍🔬</span>
+            <div class="mgr-info">
+              <strong>Felicia Raspet</strong>
+              <small>AI Analyst</small>
+            </div>
+            <i class="fa-solid fa-ellipsis mgr-more"></i>
+          </li>
+        </ul>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
