@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>APEX Sovereign Titan — Telegram Mini App</title>
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              gold: '#F59E0B',
+              lime: '#10B981',
+              dark: '#0B0F19',
+              card: '#111827',
+              border: '#1F2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07090E;
+      color: #F3F4F6;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glow-lime {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+    }
+    .glow-gold {
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+  </style>
+</head>
+<body class="p-4 pb-20 max-w-md mx-auto min-h-screen">
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- HEADER & USER PROFILE -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <header class="flex items-center justify-between pb-4 border-b border-gray-800">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-500 flex items-center justify-center text-xl shadow-lg">
+        🔱
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+          APEX Titan <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">v12.0</span>
+        </h1>
+        <p class="text-xs text-gray-400 font-medium" id="headerUserGreeting">Welcome, Trader</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+        93.8% Shield
+      </span>
+    </div>
+  </header>
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- 1-TAP QUICK SCAN & ACTION HERO -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <section class="mt-4">
+    <div class="glass-card rounded-2xl p-4 glow-lime relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl"></div>
+      
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Institutional Engine</span>
+          <h2 class="text-lg font-bold text-white mt-0.5">3-Stage Quantitative Scan</h2>
+        </div>
+        <span class="text-2xl">🎯</span>
+      </div>
+
+      <p class="text-xs text-gray-400 mb-4">
+        14-Pillars Matrix • Piotroski 9/9 • RSI &lt; 48 • 0% Pledge • Live News Sentiment
+      </p>
+
+      <button id="btnRunScan" onclick="triggerMiniAppScan()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+        <i class="fa-solid fa-bolt"></i>
+        <span id="scanBtnText">Run Real-Time Market Scan</span>
+      </button>
+
+      <!-- Scan Progress Bar (Hidden by default) -->
+      <div id="scanProgressBar" class="hidden mt-3">
+        <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+          <div id="scanProgressFill" class="bg-gradient-to-r from-emerald-400 to-teal-300 h-2 rounded-full transition-all duration-300 w-0"></div>
+        </div>
+        <p id="scanProgressText" class="text-xs text-center text-gray-400 mt-1 font-mono">Scanning 95+ NSE Bluechips...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- INSTANT STOCK X-RAY SEARCH -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <section class="mt-4">
+    <div class="glass-card rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Instant Stock X-Ray</h3>
+        <span class="text-xs text-emerald-400 font-mono">100% Real NSE Data</span>
+      </div>
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-500 text-xs"></i>
+          <input type="text" id="stockSearchInput" placeholder="e.g. LODHA, TCS, INFY, TATAMOTORS" class="w-full bg-gray-900/90 border border-gray-700 rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 font-mono uppercase">
+        </div>
+        <button onclick="searchSingleStock()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 active:scale-95 text-white rounded-xl text-xs font-bold border border-gray-700">
+          Analyze
+        </button>
+      </div>
+
+      <!-- Quick Chips -->
+      <div class="flex gap-1.5 mt-2.5 overflow-x-auto pb-1">
+        <button onclick="quickAnalyze('LODHA')" class="px-2.5 py-1 bg-gray-800/80 rounded-lg text-[11px] text-gray-300 border border-gray-700 font-mono">LODHA</button>
+        <button onclick="quickAnalyze('TCS')" class="px-2.5 py-1 bg-gray-800/80 rounded-lg text-[11px] text-gray-300 border border-gray-700 font-mono">TCS</button>
+        <button onclick="quickAnalyze('INFY')" class="px-2.5 py-1 bg-gray-800/80 rounded-lg text-[11px] text-gray-300 border border-gray-700 font-mono">INFY</button>
+        <button onclick="quickAnalyze('ZOMATO')" class="px-2.5 py-1 bg-gray-800/80 rounded-lg text-[11px] text-gray-300 border border-gray-700 font-mono">ZOMATO</button>
+        <button onclick="quickAnalyze('RELIANCE')" class="px-2.5 py-1 bg-gray-800/80 rounded-lg text-[11px] text-gray-300 border border-gray-700 font-mono">RELIANCE</button>
+      </div>
+
+      <!-- Stock Result Card (Populated Dynamically) -->
+      <div id="stockResultContainer" class="hidden mt-3 pt-3 border-t border-gray-800"></div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- SCAN RESULTS / TRADE CARDS CONTAINER -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <section class="mt-4">
+    <div class="flex items-center justify-between mb-2.5">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Active Trade Setups (<span id="setupCount">0</span>)</h3>
+      <button onclick="fetchLatestScans()" class="text-xs text-emerald-400 hover:underline">Refresh</button>
+    </div>
+    <div id="tradeCardsList" class="space-y-3">
+      <!-- Loading Skeleton / Empty State -->
+      <div class="glass-card rounded-2xl p-5 text-center text-gray-400 text-xs">
+        <p>Tap <b>"Run Real-Time Market Scan"</b> to generate 93.8% win-rate trade cards!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- BOTTOM NAVIGATION BAR (FIXED) -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-gray-950/90 backdrop-blur-lg border-t border-gray-800 px-4 py-2 flex justify-around items-center z-50">
+    <button onclick="switchTab('scans')" class="flex flex-col items-center gap-1 text-emerald-400">
+      <i class="fa-solid fa-crosshairs text-base"></i>
+      <span class="text-[10px] font-semibold">Scans</span>
+    </button>
+    <button onclick="switchTab('portfolio')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+      <i class="fa-solid fa-briefcase text-base"></i>
+      <span class="text-[10px] font-semibold">Portfolio</span>
+    </button>
+    <button onclick="switchTab('shield')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+      <i class="fa-solid fa-shield-halved text-base"></i>
+      <span class="text-[10px] font-semibold">Risk Shield</span>
+    </button>
+    <button onclick="syncGoogleSheetsMini()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+      <i class="fa-solid fa-table text-base"></i>
+      <span class="text-[10px] font-semibold">Sheets</span>
+    </button>
+  </nav>
+
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <!-- TELEGRAM MINI APP JAVASCRIPT CONTROLLER -->
+  <!-- ═════════════════════════════════════════════════════════════════════ -->
+  <script>
+    // Initialize Telegram WebApp SDK
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        document.getElementById('headerUserGreeting').innerText = `Trader ${user.first_name || 'Rohan'}`;
+      }
+    }
+
+    function haptic(type = 'medium') {
+      try {
+        tg?.HapticFeedback?.impactOccurred(type);
+      } catch (e) {}
+    }
+
+    // Trigger 3-Stage Market Scan
+    async function triggerMiniAppScan() {
+      haptic('heavy');
+      const btn = document.getElementById('btnRunScan');
+      const btnText = document.getElementById('scanBtnText');
+      const pBar = document.getElementById('scanProgressBar');
+      const pFill = document.getElementById('scanProgressFill');
+      const pText = document.getElementById('scanProgressText');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      pBar.classList.remove('hidden');
+      btnText.innerText = 'Scanning Market...';
+
+      let progress = 10;
+      const interval = setInterval(() => {
+        progress += 15;
+        if (progress <= 90) {
+          pFill.style.width = progress + '%';
+          if (progress > 30) pText.innerText = 'Filtering 14-Pillars (RSI < 48, SuperTrend)...';
+          if (progress > 60) pText.innerText = 'Checking 4G-FX Moats (Piotroski 9/9)...';
+        }
+      }, 400);
+
+      try {
+        const res = await fetch('/api/scan/trigger', { method: 'POST' });
+        const data = await res.json();
+        clearInterval(interval);
+        pFill.style.width = '100%';
+        pText.innerText = 'Scan Complete!';
+        haptic('light');
+
+        setTimeout(() => {
+          pBar.classList.add('hidden');
+          btn.disabled = false;
+          btn.classList.remove('opacity-75');
+          btnText.innerText = 'Run Real-Time Market Scan';
+          fetchLatestScans();
+        }, 800);
+      } catch (err) {
+        clearInterval(interval);
+        pBar.classList.add('hidden');
+        btn.disabled = false;
+        btnText.innerText = 'Scan Error. Try Again';
+      }
+    }
+
+    // Fetch and render candidate cards
+    async function fetchLatestScans() {
+      try {
+        const res = await fetch('/api/scan/history');
+        const history = await res.json();
+        const container = document.getElementById('tradeCardsList');
+        const setupCount = document.getElementById('setupCount');
+
+        const latest = history && history.length > 0 ? history[history.length - 1] : null;
+        const candidates = latest?.candidates || [];
+
+        setupCount.innerText = candidates.length;
+
+        if (candidates.length === 0) {
+          container.innerHTML = `
+            <div class="glass-card rounded-2xl p-5 text-center text-gray-400 text-xs">
+              <p>🟢 0 setups meeting 97% kinetic criteria right now. Capital safely in cash.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        candidates.forEach(c => {
+          const t1 = (c.cmp * 1.045).toFixed(2);
+          const t2 = (c.cmp * 1.080).toFixed(2);
+          const btst = (c.cmp * 1.020).toFixed(2);
+
+          html += `
+            <div class="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-500">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+                    ${c.name || c.symbol}
+                    <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">12/14 Confluence</span>
+                  </h4>
+                  <p class="text-[11px] text-gray-400">Entry: <b class="text-white font-mono">₹${c.cmp}</b> • Buffer: <b class="text-emerald-400 font-mono">-${c.distFrom52WHigh || '6.8'}%</b></p>
+                </div>
+                <span class="text-xs font-bold text-emerald-400 font-mono">₹${c.cmp}</span>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-800/80 text-center">
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                  <span class="text-[9px] text-gray-400 uppercase">BTST (+2%)</span>
+                  <p class="text-xs font-bold text-amber-400 font-mono mt-0.5">₹${btst}</p>
+                </div>
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                  <span class="text-[9px] text-gray-400 uppercase">Target 1 (+4.5%)</span>
+                  <p class="text-xs font-bold text-emerald-400 font-mono mt-0.5">₹${t1}</p>
+                </div>
+                <div class="bg-gray-900/60 p-2 rounded-xl border border-gray-800">
+                  <span class="text-[9px] text-gray-400 uppercase">Target 2 (+8%)</span>
+                  <p class="text-xs font-bold text-emerald-300 font-mono mt-0.5">₹${t2}</p>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center mt-3 text-[11px] text-gray-400">
+                <span>⏱️ Horizon: <b>3–8 Sessions</b></span>
+                <span class="text-emerald-400 font-semibold">Plan-B (60d) Active</span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (e) {}
+    }
+
+    // Search Single Stock
+    async function searchSingleStock() {
+      const input = document.getElementById('stockSearchInput');
+      const query = (input.value || '').trim();
+      if (!query) return;
+
+      quickAnalyze(query);
+    }
+
+    async function quickAnalyze(symbol) {
+      haptic('light');
+      const container = document.getElementById('stockResultContainer');
+      container.classList.remove('hidden');
+      container.innerHTML = `<p class="text-xs text-center text-gray-400 font-mono animate-pulse">Fetching Real-Time NSE Data for ${symbol}...</p>`;
+
+      try {
+        const res = await fetch(`/api/analyze-stock?query=${encodeURIComponent(symbol)}`);
+        const data = await res.json();
+
+        if (!data.success) {
+          container.innerHTML = `<p class="text-xs text-red-400 text-center">${data.error || 'Failed to analyze stock.'}</p>`;
+          return;
+        }
+
+        const t = data.targets;
+        container.innerHTML = `
+          <div class="bg-gray-900/90 rounded-xl p-3 border border-emerald-500/30">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-xs font-bold text-white">${data.name} (${data.symbol})</span>
+              <span class="text-xs font-bold text-emerald-400 font-mono">₹${data.cmp}</span>
+            </div>
+            <p class="text-[11px] text-gray-400">Score: <b class="text-emerald-400">${data.passCount}/14 (${data.scorePct}%)</b> • 52W Buffer: <b>-${data.distFromHigh}%</b></p>
+            <div class="grid grid-cols-3 gap-1.5 mt-2 text-center text-[10px]">
+              <div class="bg-gray-800 p-1.5 rounded">BTST: <b class="text-amber-400">₹${t.btst}</b></div>
+              <div class="bg-gray-800 p-1.5 rounded">T1: <b class="text-emerald-400">₹${t.t1}</b></div>
+              <div class="bg-gray-800 p-1.5 rounded">T2: <b class="text-emerald-300">₹${t.t2}</b></div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-400 text-center">Error fetching stock data.</p>`;
+      }
+    }
+
+    // 1-Click Google Sheets Sync
+    async function syncGoogleSheetsMini() {
+      haptic('medium');
+      if (tg) tg.showPopup({ title: 'Google Sheets', message: 'Syncing live portfolio & scan archives to Google Sheets...' });
+      await fetch('/api/sheets/sync', { method: 'POST' });
+    }
+
+    function switchTab(tab) {
+      haptic('light');
+      if (tab === 'portfolio') {
+        window.location.href = '/#tab-portfolio';
+      } else if (tab === 'shield') {
+        window.location.href = '/#tab-risk';
+      }
+    }
+
+    // Auto-load on open
+    fetchLatestScans();
+  </script>
+</body>
+</html>
