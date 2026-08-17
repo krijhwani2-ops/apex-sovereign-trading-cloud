@@ -7,9 +7,7 @@ import { scanStocks, backtestStock } from './src/strategy.js';
 import { syncToGoogleSheets, getSheetsConfig, saveSheetsConfig, prepareSyncPayload } from './src/google_sheets_sync.js';
 import { startTelegramBotListener } from './src/telegram_bot_daemon.js';
 import { startDevBot } from './antigravity_dev_bot.js';
-
-
-
+import { analyzeSingleStockOnDemand } from './src/single_stock_analyzer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +17,23 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 📱 Telegram Mini App (Web App) Routes
+app.get(['/webapp', '/twa'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'telegram_mini_app.html'));
+});
+
+// 🔍 Instant Single Stock Analysis API for Mini App
+app.get('/api/analyze-stock', async (req, res) => {
+  try {
+    const query = req.query.query || 'LODHA';
+    const result = await analyzeSingleStockOnDemand(query);
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 
 const LEDGER_PATH = path.join(__dirname, 'data', 'portfolio_ledger.json');
 const SHIELD_PATH = path.join(__dirname, 'config', 'shield_config.json');
