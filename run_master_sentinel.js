@@ -289,7 +289,11 @@ async function runMasterSentinel() {
       const g13 = (curMacd && curMacd.histogram >= -0.5) || (curStoch && curStoch.k > curStoch.d);
 
       // G14: 4G-FX Fundamental Seal of Approval
-      const g14 = fundamentalData.passedQualitySeal;
+      const g14 = fundamentalData.passedQualitySeal && fundamentalData.fScore >= 7;
+
+      // Hard Risk Cap: Reject setups where 1.5x ATR requires > 4.2% Stop Loss
+      const curAtrRiskPct = ((1.5 * curAtr) / C) * 100;
+      if (curAtrRiskPct > (shield.maxSlAllowedPct || 4.2)) continue;
 
       const gates = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14];
       let passCount = 0;
@@ -297,16 +301,18 @@ async function runMasterSentinel() {
 
       const score = Math.round((passCount / 14) * 100);
 
+      // Strict Confluence Gatekeeper (Minimum 10 Gates + Mandatory Moat)
+      if (!g14 || passCount < (shield.minGatePass || 10)) continue;
+
       let tier = '', signal = '';
-      if (passCount >= 12 && g14) {
+      if (passCount >= 12 && fundamentalData.fScore >= 8) {
         tier = 'AAA+ (Sovereign Titan Elite)';
         signal = '🔥 AAA+ SOVEREIGN ELITE';
-      } else if (passCount >= 10) {
+      } else {
         tier = 'AA+ (Sovereign Pro)';
         signal = '🟢 AA+ SOVEREIGN PRO';
-      } else {
-        continue;
       }
+
 
       const allocPct = passCount >= 12 ? 10 : 5;
       const gateIcons = gates.map(g => g ? '🟩' : '⬛').join('');
