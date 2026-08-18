@@ -2,8 +2,8 @@
  * ══════════════════════════════════════════════════════════════════════════
  * 🔱 APEX-OMNIVERSE SOVEREIGN TITAN v12.0 — 100% REAL LIVE MARKET FETCHER
  * ══════════════════════════════════════════════════════════════════════════
- * Directly fetches 100% authentic real-time market data & historical daily
- * candles from Yahoo Finance Direct API for any NSE/BSE stock without mocks.
+ * Directly fetches 100% authentic real-time market data & multi-timeframe
+ * historical candles (15m, 1h, 1d, 1wk) from Yahoo Finance Direct API.
  * ══════════════════════════════════════════════════════════════════════════
  */
 
@@ -93,41 +93,12 @@ export function normalizeTicker(query) {
 }
 
 /**
- * Fetches 100% REAL live market candles from Yahoo Finance Direct Chart API
- * @param {string} symbol - NSE/BSE ticker symbol (e.g. LODHA.NS, TCS.NS)
- * @returns {Promise<object[]>} Array of { date, open, high, low, close, volume, isLive: true }
+ * Parses raw Yahoo Finance chart json into clean OHLCV candle objects
  */
-export async function fetchLiveStockCandles(symbol) {
-  const normalized = normalizeTicker(symbol);
-  const endpoints = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${normalized}?interval=1d&range=1y`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${normalized}?interval=1d&range=1y`
-  ];
+function parseCandlesFromYahoo(json) {
+  if (!json || !json.chart || !json.chart.result || !json.chart.result[0]) return [];
 
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*'
-  };
-
-  let rawData = null;
-  for (const url of endpoints) {
-    try {
-      const response = await fetch(url, { headers });
-      if (response.ok) {
-        const json = await response.json();
-        if (json.chart && json.chart.result && json.chart.result[0]) {
-          rawData = json.chart.result[0];
-          break;
-        }
-      }
-    } catch (e) {}
-  }
-
-  if (!rawData) {
-    throw new Error(`Failed to fetch real market data for ${normalized}.`);
-  }
-
-  const meta = rawData.meta || {};
+  const rawData = json.chart.result[0];
   const timestamps = rawData.timestamp || [];
   const quotes = rawData.indicators?.quote?.[0] || {};
 
@@ -143,7 +114,7 @@ export async function fetchLiveStockCandles(symbol) {
       const cClose = +closes[i].toFixed(2);
       const cOpen = (opens[i] !== null && !isNaN(opens[i])) ? +opens[i].toFixed(2) : cClose;
       const cHigh = (highs[i] !== null && !isNaN(highs[i])) ? +highs[i].toFixed(2) : Math.max(cOpen, cClose);
-      const cLow = (lows[i] !== null && !isNaN(lowss => lows[i])) ? +lows[i].toFixed(2) : Math.min(cOpen, cClose);
+      const cLow = (lows[i] !== null && !isNaN(lows[i])) ? +lows[i].toFixed(2) : Math.min(cOpen, cClose);
       const cVol = (volumes[i] !== null && !isNaN(volumes[i])) ? Math.round(volumes[i]) : 100000;
 
       candles.push({
@@ -158,9 +129,91 @@ export async function fetchLiveStockCandles(symbol) {
     }
   }
 
+  return candles;
+}
+
+/**
+ * Fetches 100% REAL live market candles from Yahoo Finance Direct Chart API for a single interval
+ * @param {string} symbol - NSE/BSE ticker symbol (e.g. LODHA.NS, TCS.NS)
+ * @param {string} interval - '15m' | '1h' | '1d' | '1wk'
+ * @param {string} range - '5d' | '1mo' | '1y' | '2y'
+ * @returns {Promise<object[]>} Array of { date, open, high, low, close, volume, isLive: true }
+ */
+export async function fetchLiveStockCandles(symbol, interval = '1d', range = '1y') {
+  const normalized = normalizeTicker(symbol);
+  const endpoints = [
+    `https://query1.finance.yahoo.com/v8/finance/chart/${normalized}?interval=${interval}&range=${range}`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${normalized}?interval=${interval}&range=${range}`
+  ];
+
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*'
+  };
+
+  let rawJson = null;
+  for (const url of endpoints) {
+    try {
+      const response = await fetch(url, { headers });
+      if (response.ok) {
+        const json = await response.json();
+        if (json.chart && json.chart.result && json.chart.result[0]) {
+          rawJson = json;
+          break;
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!rawJson) {
+    throw new Error(`Failed to fetch real market data for ${normalized} (${interval}).`);
+  }
+
+  const candles = parseCandlesFromYahoo(rawJson);
   if (candles.length === 0) {
-    throw new Error(`Zero valid candles for ${normalized}`);
+    throw new Error(`Zero valid candles for ${normalized} (${interval})`);
   }
 
   return candles;
+}
+
+/**
+ * Fetches Multi-Timeframe Candles (15m, 1h, Daily 1d, Weekly 1wk) in parallel
+ * @param {string} symbol - Ticker Symbol
+ * @returns {Promise<{ symbol: string, daily: object[], hourly: object[], intraday15m: object[], weekly: object[], cmp: number, high52: number, low52: number }>}
+ */
+export async function fetchMultiTimeframeCandles(symbol) {
+  const normSym = normalizeTicker(symbol);
+
+  const [dailyRes, hourlyRes, m15Res, weeklyRes] = await Promise.allSettled([
+    fetchLiveStockCandles(normSym, '1d', '1y'),
+    fetchLiveStockCandles(normSym, '1h', '1mo'),
+    fetchLiveStockCandles(normSym, '15m', '5d'),
+    fetchLiveStockCandles(normSym, '1wk', '2y')
+  ]);
+
+  const daily = dailyRes.status === 'fulfilled' ? dailyRes.value : [];
+  const hourly = hourlyRes.status === 'fulfilled' ? hourlyRes.value : [];
+  const intraday15m = m15Res.status === 'fulfilled' ? m15Res.value : [];
+  const weekly = weeklyRes.status === 'fulfilled' ? weeklyRes.value : [];
+
+  if (daily.length === 0) {
+    throw new Error(`Could not fetch daily candles for ${normSym}`);
+  }
+
+  const lastBar = daily[daily.length - 1];
+  const cmp = lastBar.close;
+  const high52 = Math.max(...daily.map(c => c.high));
+  const low52 = Math.min(...daily.map(c => c.low));
+
+  return {
+    symbol: normSym,
+    cmp,
+    high52,
+    low52,
+    daily,
+    hourly: hourly.length > 0 ? hourly : daily,
+    intraday15m: intraday15m.length > 0 ? intraday15m : daily,
+    weekly: weekly.length > 0 ? weekly : daily
+  };
 }
