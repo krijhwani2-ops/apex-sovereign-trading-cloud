@@ -349,20 +349,41 @@
         }
 
         const t = data.targets;
+        const mtf = data.multiTimeframe || {};
+        const tfW = mtf.timeframes?.weekly?.statusIcon || '🟢';
+        const tfD = mtf.timeframes?.daily?.statusIcon || '🟢';
+        const tfH = mtf.timeframes?.hourly?.statusIcon || '🟡';
+        const tfM = mtf.timeframes?.m15?.statusIcon || '🟢';
+
+        const patText = mtf.activePatterns && mtf.activePatterns.length > 0
+          ? `<span class="inline-block mt-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px]">${mtf.activePatterns[0].icon} ${mtf.activePatterns[0].name} (${mtf.activePatterns[0].timeframe})</span>`
+          : `<span class="inline-block mt-2 px-2 py-0.5 rounded bg-gray-800 text-gray-400 font-mono text-[10px]">⚖️ Clean Structural Channel</span>`;
+
         container.innerHTML = `
           <div class="bg-gray-900/90 rounded-xl p-3 border border-emerald-500/30">
             <div class="flex justify-between items-center mb-1.5">
               <span class="text-xs font-bold text-white">${data.name} (${data.symbol})</span>
               <span class="text-xs font-bold text-emerald-400 font-mono">₹${data.cmp}</span>
             </div>
-            <p class="text-[11px] text-gray-400">Score: <b class="text-emerald-400">${data.passCount}/14 (${data.scorePct}%)</b> • 52W Buffer: <b>-${data.distFromHigh}%</b></p>
-            <div class="grid grid-cols-3 gap-1.5 mt-2 text-center text-[10px]">
+            <p class="text-[11px] text-gray-400">Score: <b class="text-emerald-400">${data.passCount}/16 (${data.scorePct}%)</b> • Buffer: <b>-${data.distFromHigh}%</b></p>
+            
+            <div class="flex gap-1.5 mt-2 text-[10px] font-mono">
+              <span class="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300">${tfW} Wk</span>
+              <span class="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300">${tfD} Day</span>
+              <span class="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300">${tfH} 1H</span>
+              <span class="px-1.5 py-0.5 bg-gray-800 rounded text-gray-300">${tfM} 15m</span>
+            </div>
+
+            ${patText}
+
+            <div class="grid grid-cols-3 gap-1.5 mt-2.5 text-center text-[10px]">
               <div class="bg-gray-800 p-1.5 rounded">BTST: <b class="text-amber-400">₹${t.btst}</b></div>
-              <div class="bg-gray-800 p-1.5 rounded">T1: <b class="text-emerald-400">₹${t.t1}</b></div>
-              <div class="bg-gray-800 p-1.5 rounded">T2: <b class="text-emerald-300">₹${t.t2}</b></div>
+              <div class="bg-gray-800 p-1.5 rounded">T1 (+4.5%): <b class="text-emerald-400">₹${t.t1}</b></div>
+              <div class="bg-gray-800 p-1.5 rounded">SL (1.5x ATR): <b class="text-rose-400">₹${t.sl}</b></div>
             </div>
           </div>
         `;
+
       } catch (err) {
         container.innerHTML = `<p class="text-xs text-red-400 text-center">Error fetching stock data.</p>`;
       }
