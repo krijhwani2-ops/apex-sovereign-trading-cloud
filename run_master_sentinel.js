@@ -17,8 +17,10 @@ import {
   detectWyckoffSpring,
   analyzeVSAAbsorption,
   performFundamentalXRay,
-  scanStockNewsIntelligence
+  scanStockNewsIntelligence,
+  scanCandlestickPatterns
 } from './src/strategy.js';
+
 import { syncToGoogleSheets } from './src/google_sheets_sync.js';
 import { sendScanResultsTelegram } from './src/telegram_notifier.js';
 
@@ -333,6 +335,9 @@ async function runMasterSentinel() {
         `**Trend Strength & Squeeze**: ADX is **${curAdx ? curAdx.adx : 25}** (${curAdx ? curAdx.trendStrength : 'STRONG'}) | TTM Squeeze: **${curSqueeze ? (curSqueeze.isSqueezed ? 'COILING' : 'FIRING') : 'READY'}**.`
       ];
 
+      // Candlestick Pattern Scan
+      const activeCandlePatterns = scanCandlestickPatterns(data);
+
       candidates.push({
         symbol: ticker,
         name: ticker.replace('.NS', ''),
@@ -353,11 +358,13 @@ async function runMasterSentinel() {
         moatTier: fundamentalData.moatTier,
         superTrend: curST ? curST.direction : 'UP',
         adxVal: curAdx ? curAdx.adx : 25,
+        candlestickPatterns: activeCandlePatterns,
         entryLow: +(C * 0.998).toFixed(2),
         entryHigh: +(C * 1.002).toFixed(2),
         target1: +(C * 1.045).toFixed(2),
         target2: +(C * 1.080).toFixed(2),
         target3: +(C * 1.140).toFixed(2),
+
         allocPct,
         gateIcons,
         whyGoodStock,
