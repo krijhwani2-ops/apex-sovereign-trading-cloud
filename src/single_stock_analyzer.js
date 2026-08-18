@@ -30,9 +30,10 @@ import { fetchLiveStockCandles, normalizeTicker } from './live_market_fetcher.js
  * @returns {Promise<object>} Complete institutional report & trade card
  */
 export async function analyzeSingleStockOnDemand(query) {
-  let liveData;
+  const normSym = normalizeTicker(query);
+  let candles;
   try {
-    liveData = await fetchLiveStockCandles(query);
+    candles = await fetchLiveStockCandles(normSym);
   } catch (err) {
     return {
       success: false,
@@ -40,17 +41,20 @@ export async function analyzeSingleStockOnDemand(query) {
     };
   }
 
-  const { symbol, rawName, cmp, high52W, low52W, candles } = liveData;
+  if (!candles || candles.length === 0) {
+    return { success: false, error: `No live candles found for ${normSym}` };
+  }
 
+  const rawName = normSym.replace('.NS', '').replace('.BO', '');
   const closes = candles.map(c => c.close);
   const highs = candles.map(c => c.high);
   const lows = candles.map(c => c.low);
   const volumes = candles.map(c => c.volume);
   const lastIndex = closes.length - 1;
 
-  const lastHigh = highs[lastIndex];
-  const lastLow = lows[lastIndex];
-  const lastVol = volumes[lastIndex];
+  const cmp = closes[lastIndex];
+  const high52W = Math.max(...highs);
+  const low52W = Math.min(...lows);
 
   // 1. Technical Indicators
   const ema20Arr = calculateEMA(closes, 20);
@@ -74,20 +78,20 @@ export async function analyzeSingleStockOnDemand(query) {
   const distFromHigh = +(((high52W - cmp) / high52W) * 100).toFixed(1);
 
   // 2. Fundamental X-Ray (4G-FX)
-  const fx = performFundamentalXRay(symbol);
+  const fx = performFundamentalXRay(normSym);
 
   // 3. Live News Sentiment & Toxic Veto
-  const news = await scanStockNewsIntelligence(symbol, rawName);
+  const news = await scanStockNewsIntelligence(normSym, rawName);
 
   // 4. 14-Pillar Confluence Score Calculation
   let passCount = 0;
-  if (cmp >= sma200 * 0.95) passCount++; // 1. Macro Trend Alignment
-  if (distFromHigh >= 2.0 && distFromHigh <= 30.0) passCount++; // 2. 52W Peak Buffer (Not buying extreme top)
-  if (rsi14 <= 60) passCount++; // 3. RSI Launchpad
-  if (rsi7 <= 40 || closes[lastIndex] <= closes[lastIndex - 1]) passCount++; // 4. Pullback
+  if (cmp >= (sma200 ? sma200 * 0.95 : cmp * 0.9)) passCount++; // 1. Macro Trend Alignment
+  if (distFromHigh >= 2.0 && distFromHigh <= 32.0) passCount++; // 2. 52W Peak Buffer
+  if (rsi14 <= 62) passCount++; // 3. RSI Launchpad
+  if (rsi7 <= 45 || closes[lastIndex] <= closes[lastIndex - 1]) passCount++; // 4. Pullback
   if (cmp <= (bbArr.upper ? bbArr.upper[lastIndex] * 1.01 : cmp * 1.05)) passCount++; // 5. %B exhaustion
   if (vsa.upperWickRatio <= 0.25) passCount++; // 6. VSA absorption
-  if (lastVol >= (volumes.slice(-20).reduce((s,v)=>s+v,0)/20) * 1.05) passCount++; // 7. Vol surge
+  if (volumes[lastIndex] >= (volumes.slice(-20).reduce((s,v)=>s+v,0)/20) * 1.05) passCount++; // 7. Vol surge
   if (cmp >= ema20 * 0.96 || cmp >= sma50 * 0.96) passCount++; // 8. Structural Support
   if (vsa.isVsaAbsorption) passCount++; // 9. Absorption
   if (closes[lastIndex] >= (highs[lastIndex-1] + lows[lastIndex-1])/2) passCount++; // 10. Midpoint
@@ -125,7 +129,7 @@ export async function analyzeSingleStockOnDemand(query) {
   const target3 = +(cmp * 1.140).toFixed(2);
 
   // Format Rich Actionable Telegram Trade Card
-  const tradeCard = `🎯 <b>LIVE QUANTITATIVE REPORT: ${tierIcon} ${rawName} (${symbol})</b>\n` +
+  const tradeCard = `🎯 <b>LIVE QUANTITATIVE REPORT: ${tierIcon} ${rawName} (${normSym})</b>\n` +
     `🏷️ <b>Signal Tier:</b> <code>${tier}</code>\n` +
     `📊 <b>14-Pillar Confluence Score:</b> <b>${passCount}/14 (${scorePct}%)</b>\n` +
     `───────────────────────────────────\n\n` +
@@ -164,18 +168,20 @@ export async function analyzeSingleStockOnDemand(query) {
 
   return {
     success: true,
-    symbol,
+    symbol: normSym,
     name: rawName,
     cmp,
-    high52W,
-    low52W,
+    high52: high52W,
+    low52: low52W,
     distFromHigh,
     rsi14,
     passCount,
+    score: scorePct,
     scorePct,
     tier,
     fScore: fx.fScore,
     roce: fx.roce,
+    moatTier: fx.moatTier,
     news,
     targets: { btst: btstTarget, t1: target1, t2: target2, t3: target3 },
     tradeCard
