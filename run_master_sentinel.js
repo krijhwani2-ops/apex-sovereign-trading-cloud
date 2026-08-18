@@ -23,6 +23,8 @@ import {
 
 import { syncToGoogleSheets } from './src/google_sheets_sync.js';
 import { sendScanResultsTelegram } from './src/telegram_notifier.js';
+import { getNifty500Universe } from './src/nifty500_universe.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -155,32 +157,14 @@ async function runMasterSentinel() {
 
   ledger.activePositions = stillActive;
 
-  // 4. Enhanced Universe Scanner (Institutional Giants & Leaders)
-  const universe = [
-    'TCS.NS', 'RELIANCE.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS',
-    'LT.NS', 'TITAN.NS', 'KOTAKBANK.NS', 'AXISBANK.NS', 'SBIN.NS',
-    'BHARTIARTL.NS', 'ITC.NS', 'HINDUNILVR.NS', 'ASIANPAINT.NS', 'MARUTI.NS',
-    'M&M.NS', 'TATAMOTORS.NS', 'SUNPHARMA.NS', 'BAJFINANCE.NS', 'NTPC.NS',
-    'POWERGRID.NS', 'ULTRACEMCO.NS', 'NESTLEIND.NS', 'WIPRO.NS', 'HCLTECH.NS',
-    'TATASTEEL.NS', 'JSWSTEEL.NS', 'TECHM.NS', 'INDUSINDBK.NS', 'ADANIENT.NS',
-    'ONGC.NS', 'COALINDIA.NS', 'BPCL.NS', 'GRASIM.NS', 'DIVISLAB.NS',
-    'DRREDDY.NS', 'CIPLA.NS', 'EICHERMOT.NS', 'BAJAJ-AUTO.NS', 'HEROMOTOCO.NS',
-    'APOLLOHOSP.NS', 'BRITANNIA.NS', 'TATACONSUM.NS', 'SBILIFE.NS', 'HDFCLIFE.NS',
-    'PIDILITIND.NS', 'HAVELLS.NS', 'GODREJCP.NS', 'DABUR.NS', 'MARICO.NS',
-    'BERGEPAINT.NS', 'COLPAL.NS', 'MCDOWELL-N.NS', 'TRENT.NS', 'DIXON.NS',
-    'CDSL.NS', 'POLYCAB.NS', 'ASTRAL.NS', 'DEEPAKNTR.NS', 'ATUL.NS',
-    'PIIND.NS', 'PERSISTENT.NS', 'COFORGE.NS', 'MPHASIS.NS', 'LTIM.NS',
-    'VOLTAS.NS', 'CROMPTON.NS', 'KAYNES.NS', 'ZENTEC.NS', 'BIOCON.NS',
-    'ZYDUSLIFE.NS', 'TORNTPHARM.NS', 'AUROPHARMA.NS', 'IPCALAB.NS', 'ALKEM.NS',
-    'CHOLAFIN.NS', 'MUTHOOTFIN.NS', 'BAJAJFINSV.NS', 'MAXHEALTH.NS', 'FORTIS.NS',
-    'DLF.NS', 'GODREJPROP.NS', 'OBEROIRLTY.NS', 'PHOENIXLTD.NS', 'PRESTIGE.NS',
-    'BEL.NS', 'HAL.NS', 'BHEL.NS', 'SIEMENS.NS', 'ABB.NS',
-    'CUMMINSIND.NS', 'THERMAX.NS', 'TATAPOWER.NS', 'NHPC.NS', 'IRFC.NS'
-  ];
+  // 4. Complete NIFTY 500 Master Universe Scanner
+  const universe = getNifty500Universe();
 
   const scanWarmup = new Date('2025-06-01');
   const candidates = [];
-  console.log(`\n🔍 Stage-1: Scanning ${universe.length} equities with Dual Fundamental X-Ray + Technical Stack...`);
+  console.log(`\n🔍 Stage-1: Scanning ALL ${universe.length} Equities in NIFTY 500 (Large, Mid & Small-Caps)...`);
+
+
 
   for (const ticker of universe) {
     if (shield.restrictedSymbols?.includes(ticker)) {
