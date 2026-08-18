@@ -237,3 +237,5 @@ export async function scanStocks(symbols = []) {
 export * from './technical_analysis.js';
 export * from './fundamental_xray.js';
 export * from './news_catalyst_scanner.js';
+export * from './candlestick_pattern_engine.js';
+
