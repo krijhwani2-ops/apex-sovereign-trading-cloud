@@ -1,19 +1,27 @@
 {
-  "minRsi14Limit": 48,
-  "minRsi7Limit": 35,
-  "maxBBPercentB": 0.28,
-  "maxWickRatio": 0.24,
-  "minVolSurge": 1.2,
-  "minGatePass": 9,
-  "maxTimeStop": 60,
-  "restrictedSymbols": [
-    "CHOLAFIN.NS"
-  ],
+  "minRsi14Limit": 58,
+  "minRsi7Limit": 42,
+  "maxBBPercentB": 0.35,
+  "maxWickRatio": 0.18,
+  "minVolSurge": 1.25,
+  "minGatePass": 11,
+  "maxTimeStop": 45,
+  "maxSlAllowedPct": 4.2,
   "enableOBVFilter": true,
   "enableHigherLowCheck": true,
+  "enableVWAPReclaim": true,
+  "enableRelativeStrength": true,
+  "restrictedSymbols": [
+    "CHOLAFIN.NS",
+    "TALWALKARS.NS",
+    "YESBANK.NS",
+    "JETAIRWAYS.NS",
+    "ZEEL.NS"
+  ],
   "reasoning": [
-    "Avg loss severity 7.9% > 5%. Horizon extended to 60 days to allow blue-chip recovery without premature shakeout.",
-    "CHOLAFIN (CHOLAFIN.NS) quarantined in Blacklist Firewall for 30 days post -7.9% loss.",
-    "Exceptional performance: 93.8% win rate. Slightly expanding opportunity window."
+    "Hardened Stop Loss: Max allowable SL risk capped at 4.2% (1.5x ATR). Volatile setups rejected.",
+    "Institutional Confluence: Minimum 11/14 Gates required to eliminate false breakout traps.",
+    "Smart Money Absorption: Upper wick must be < 18% with Volume Surge >= 1.25x SMA(20).",
+    "4G-FX Fundamental Moat: Minimum 7/9 Piotroski F-Score + ROCE > 15% required."
   ]
 }
