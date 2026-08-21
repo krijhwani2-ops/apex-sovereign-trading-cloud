@@ -239,5 +239,7 @@ export * from './fundamental_xray.js';
 export * from './news_catalyst_scanner.js';
 export * from './candlestick_pattern_engine.js';
 export * from './live_chart_reader.js';
+export * from './institutional_alpha_accuracy.js';
+
 
 
