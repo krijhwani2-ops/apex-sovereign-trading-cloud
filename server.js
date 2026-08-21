@@ -461,6 +461,12 @@ app.listen(PORT, () => {
 
   // Start Dedicated Antigravity Dev & Coding Bot
   startDevBot();
+
+  // 🕒 Start Embedded 24/7 Unstoppable Master Scheduler
+  import('./scheduler.js')
+    .then(() => console.log('🕒 [24/7 Daemon] Master Market Scheduler initialized inside main server process.'))
+    .catch(err => console.error('❌ [Scheduler Error]:', err.message));
 });
+
 
 
