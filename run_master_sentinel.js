@@ -18,8 +18,10 @@ import {
   analyzeVSAAbsorption,
   performFundamentalXRay,
   scanStockNewsIntelligence,
-  scanCandlestickPatterns
+  scanCandlestickPatterns,
+  analyzeInstitutionalChartReading
 } from './src/strategy.js';
+
 
 import { syncToGoogleSheets } from './src/google_sheets_sync.js';
 import { sendScanResultsTelegram } from './src/telegram_notifier.js';
@@ -277,31 +279,42 @@ async function runMasterSentinel() {
       // G14: 4G-FX Fundamental Seal of Approval
       const g14 = fundamentalData.passedQualitySeal && fundamentalData.fScore >= 7;
 
+      // G15: Institutional Candlestick Pattern Detection
+      const patterns = scanCandlestickPatterns(data);
+      const g15 = patterns.length > 0 || (C > O && vsaResult.upperWickRatio <= 0.15);
+
+      // G16: Pillar 17 Live Chart Reading & SMC (VWAP + FVG + Liquidity Sweep + Volume POC)
+      const chartReading = analyzeInstitutionalChartReading(data);
+      const g16 = chartReading.passedPillar17 || (chartReading.vwap?.isAboveVWAP && chartReading.volumeProfile?.isAbovePOC);
+
       // Hard Risk Cap: Reject setups where 1.5x ATR requires > 4.2% Stop Loss
       const curAtrRiskPct = ((1.5 * curAtr) / C) * 100;
       if (curAtrRiskPct > (shield.maxSlAllowedPct || 4.2)) continue;
 
-      const gates = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14];
+      const gates = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16];
       let passCount = 0;
-      gates.forEach(g => { if (g) passCount++; });
+      let gateIcons = '';
+      gates.forEach(g => {
+        if (g) { passCount++; gateIcons += '🟩'; }
+        else { gateIcons += '⬛'; }
+      });
 
-      const score = Math.round((passCount / 14) * 100);
+      if (passCount < (shield.minGatePass || 11)) continue;
 
-      // Strict Confluence Gatekeeper (Minimum 10 Gates + Mandatory Moat)
-      if (!g14 || passCount < (shield.minGatePass || 10)) continue;
+      const score = Math.round((passCount / 16) * 100);
+      let tier = 'AA (Sovereign Quality)';
+      let signal = '🟢 AA SOVEREIGN QUALITY';
+      let allocPct = 5;
 
-      let tier = '', signal = '';
-      if (passCount >= 12 && fundamentalData.fScore >= 8) {
+      if (passCount >= 14 && fundamentalData.fScore >= 8) {
         tier = 'AAA+ (Sovereign Titan Elite)';
         signal = '🔥 AAA+ SOVEREIGN ELITE';
-      } else {
+        allocPct = 12;
+      } else if (passCount >= 12) {
         tier = 'AA+ (Sovereign Pro)';
         signal = '🟢 AA+ SOVEREIGN PRO';
+        allocPct = 8;
       }
-
-
-      const allocPct = passCount >= 12 ? 10 : 5;
-      const gateIcons = gates.map(g => g ? '🟩' : '⬛').join('');
 
       // Build Deep Logic Explanations
       const whyGoodStock = [
