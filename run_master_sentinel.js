@@ -19,8 +19,10 @@ import {
   performFundamentalXRay,
   scanStockNewsIntelligence,
   scanCandlestickPatterns,
-  analyzeInstitutionalChartReading
+  analyzeInstitutionalChartReading,
+  computeInstitutionalAlphaScore
 } from './src/strategy.js';
+
 
 
 import { syncToGoogleSheets } from './src/google_sheets_sync.js';
@@ -287,11 +289,26 @@ async function runMasterSentinel() {
       const chartReading = analyzeInstitutionalChartReading(data);
       const g16 = chartReading.passedPillar17 || (chartReading.vwap?.isAboveVWAP && chartReading.volumeProfile?.isAbovePOC);
 
-      // Hard Risk Cap: Reject setups where 1.5x ATR requires > 4.2% Stop Loss
+      // G17: Institutional Alpha Accuracy (Mansfield Relative Strength + VCP Contraction + Weekly Alignment)
+      const alphaAccuracy = computeInstitutionalAlphaScore(data);
+      const g17 = alphaAccuracy.precisionScore >= 50 && alphaAccuracy.passesPrecisionVeto;
+
+      // ── HARD RISK CAP & ANTI-OVEREXTENSION CIRCUIT BREAKERS ──
+      // 1. Anti-Overextension: Reject if price is stretched > 6.5% above 20 EMA
+      const distFromE20 = ((C - e20) / e20) * 100;
+      if (distFromE20 > 6.5) continue;
+
+      // 2. Bollinger Ceiling: Reject if %B > 0.85 (Upper band exhaustion trap)
+      if (curBB.percentB > 0.85) continue;
+
+      // 3. Multi-Timeframe Structural VETO: Reject if Weekly is in a downtrend
+      if (!alphaAccuracy.multiTf.isWeeklyAligned) continue;
+
+      // 4. Maximum Stop-Loss Distance Cap
       const curAtrRiskPct = ((1.5 * curAtr) / C) * 100;
       if (curAtrRiskPct > (shield.maxSlAllowedPct || 4.2)) continue;
 
-      const gates = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16];
+      const gates = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17];
       let passCount = 0;
       let gateIcons = '';
       gates.forEach(g => {
@@ -299,22 +316,23 @@ async function runMasterSentinel() {
         else { gateIcons += '⬛'; }
       });
 
-      if (passCount < (shield.minGatePass || 11)) continue;
+      if (passCount < (shield.minGatePass || 12)) continue;
 
-      const score = Math.round((passCount / 16) * 100);
+      const score = Math.round((passCount / 17) * 100);
       let tier = 'AA (Sovereign Quality)';
       let signal = '🟢 AA SOVEREIGN QUALITY';
       let allocPct = 5;
 
-      if (passCount >= 14 && fundamentalData.fScore >= 8) {
+      if (passCount >= 15 && fundamentalData.fScore >= 8 && alphaAccuracy.precisionScore >= 75) {
         tier = 'AAA+ (Sovereign Titan Elite)';
         signal = '🔥 AAA+ SOVEREIGN ELITE';
         allocPct = 12;
-      } else if (passCount >= 12) {
+      } else if (passCount >= 13) {
         tier = 'AA+ (Sovereign Pro)';
         signal = '🟢 AA+ SOVEREIGN PRO';
         allocPct = 8;
       }
+
 
       // Build Deep Logic Explanations
       const whyGoodStock = [
