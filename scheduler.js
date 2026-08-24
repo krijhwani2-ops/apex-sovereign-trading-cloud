@@ -7,6 +7,8 @@ const __dirname = path.dirname(__filename);
 
 const SENTINEL_SCRIPT = path.join(__dirname, 'run_master_sentinel.js');
 const ENHANCER_SCRIPT = path.join(__dirname, 'run_adaptive_enhancer.js');
+const FORENSIC_SCRIPT = path.join(__dirname, 'scripts', 'run_eod_forensic_audit.js');
+
 
 let isTaskRunning = false;
 
@@ -56,6 +58,7 @@ function runScript(scriptPath, taskName) {
 
 // Track last executed days/slots to prevent duplicate triggers in the same minute
 let lastMorningScanDate = '';
+let lastForensicScanDate = '';
 let lastEodScanDate = '';
 let lastEnhancerMinute = -1;
 
@@ -76,12 +79,20 @@ async function checkAndExecuteSchedule() {
     await runScript(SENTINEL_SCRIPT, 'Morning Market Scan (09:30 AM IST)');
   }
 
-  // 2. EOD Master Sentinel Audit: Daily at 21:00 (9:00 PM IST)
+  // 2. Post-Market EOD Loss Forensic & Auto-Improvement Audit: Mon-Fri at 16:00 (04:00 PM IST)
+  if (dayOfWeek >= 1 && dayOfWeek <= 5 && hours === 16 && minutes === 0 && lastForensicScanDate !== dateStr) {
+    lastForensicScanDate = dateStr;
+    console.log(`🔬 Triggering Post-Market EOD Forensic Loss Autopsy & Auto-Healing for ${dateStr}...`);
+    await runScript(FORENSIC_SCRIPT, 'Post-Market EOD Forensic & Auto-Healing (04:00 PM IST)');
+  }
+
+  // 3. EOD Master Sentinel Audit: Daily at 21:00 (9:00 PM IST)
   if (hours === 21 && minutes === 0 && lastEodScanDate !== dateStr) {
     lastEodScanDate = dateStr;
     console.log(`🌙 Triggering EOD Master Sentinel Audit for ${dateStr}...`);
     await runScript(SENTINEL_SCRIPT, 'EOD Master Sentinel Audit (09:00 PM IST)');
   }
+
 
   // 3. AI Accuracy Enhancer: Every 10 Minutes (e.g. :00, :10, :20, :30, :40, :50)
   if (minutes % 10 === 0 && lastEnhancerMinute !== minutes) {
